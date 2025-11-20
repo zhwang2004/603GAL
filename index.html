@@ -282,33 +282,37 @@ const SCRIPT = {
     "0": {
         bg: ASSETS.bg.dorm,
         name: "我",
-        text: "（睁开眼）陌生的天花板... 不，这是熟悉的 603 宿舍天花板。",
+        text: "（睁开眼）……熟悉的天花板。603 宿舍的早晨依旧混合着雅思词汇书、switch 手柄的热气和昨晚日本拉面的味道。",
         next: "1"
     },
+
     "1": {
-        text: "空气中弥漫着一股独特的味道——那是混杂着雅思词汇书、switch手柄散热和日本拉面的味道。",
+        text: "空气有点安静，安静得不像 603。直到——",
         next: "2"
     },
+
     "2": {
         sound: "door_open",
-        text: "突然，一阵急促的脚步声打破了平静。",
+        text: "突然，一阵急促的脚步声从走廊爆冲而来。",
         next: "3"
     },
+
     "3": {
         bg: ASSETS.bg.dorm,
         char: ASSETS.char.huang,
         anim: "hop",
         name: "黄家睿",
         color: "#ff92b9",
-        text: "Yahuu! 大家都还在睡吗？我刚刚可是梦见自己已经在秋叶原的女仆咖啡厅了！",
+        text: "Yahuu！！兄弟们！起床啦！我刚梦到我在秋叶原的女仆咖啡厅！太爽了！",
         next: "4"
     },
+
     "4": {
         name: "黄家睿",
-        text: "嘿！那边的你！你看我这个新发型，是不是很有《东京复仇者》的感觉？（摆Pose）",
+        text: "还有还有！我昨天用 Switch 连刷五小时《塞尔达》！任天堂万岁！你看我这个新发型，是不是超级东京复仇者风？（摆Pose）",
         choices: [
-            { text: "确实很帅，可以说是 603 颜值巅峰。", target: "huang_happy" },
-            { text: "比起发型，你的雅思口语练了吗？", target: "huang_shock" },
+            { text: "确实帅，603 颜值巅峰非你莫属。", target: "huang_happy" },
+            { text: "比起发型，你雅思复习了吗？", target: "huang_shock" },
             { text: "无视他，继续睡。", target: "huang_ignore" }
         ]
     },
@@ -317,45 +321,51 @@ const SCRIPT = {
     "huang_happy": {
         char: ASSETS.char.huang,
         anim: "hop",
-        text: "哈哈！不愧是懂行的！只要心中有二次元，哪里都是东京！好感度 +10。",
+        text: "哈哈！果然你懂我！只要心中有二次元，哪里都是东京！好感度 +10！",
         next: "jin_entry"
     },
+
     // --- 分支 B: 打击黄家睿 ---
     "huang_shock": {
         char: ASSETS.char.huang,
         anim: "shake",
-        text: "Gu...！为什么要在美好的早晨提这个词！你是魔鬼吗！",
+        text: "Gu——！为什么大早上要提这种东西！你是魔鬼吗！",
         next: "jin_entry"
     },
+
+    // --- 分支 C: 无视 ---
     "huang_ignore": {
-        text: "黄家睿见没人理他，只能默默拿出手机开始刷 B 站舞蹈区。",
+        text: "黄家睿沉默了一下，只能默默打开 B 站舞蹈区继续学舞。",
         next: "jin_entry"
     },
 
     // --- 核心剧情：Boss 入场 ---
     "jin_entry": {
-        bg: ASSETS.bg.gold_aura, // 切换背景压迫感
+        bg: ASSETS.bg.gold_aura,
         char: null,
-        text: "突然，宿舍的气压变低了。门口出现了一个自带金色光环的男人。",
+        text: "突然，宿舍气压明显变低。门口站着一个自带金色 aura 的男人。",
         next: "jin_show"
     },
+
     "jin_show": {
         char: ASSETS.char.jin,
         anim: "hop",
         name: "金凯峰",
-        color: "#f0932b", // 金色
-        text: "吵什么吵？不知道现在是 QS Top 20 的申校关键期吗？你们的喧哗会影响整个宿舍的风水。",
+        color: "#f0932b",
+        text: "吵什么吵？现在可是 QS Top 20 申请关键期。你们吵成这样，会干扰我吃正新鸡排时的冥想效率。",
         next: "jin_talk2"
     },
+
     "jin_talk2": {
         name: "金凯峰",
-        text: "尤其是你，黄家睿。整天把日本挂在嘴边，你的 GPA 配得上东大吗？",
+        text: "还有你，家睿。天天任天堂、任天堂……你的 GPA 配得上东大吗？",
         next: "confrontation"
     },
+
     "confrontation": {
-        char: ASSETS.char.huang, // 切换回黄
+        char: ASSETS.char.huang,
         name: "黄家睿",
-        text: "你...！QS 20了不起啊！我不追求排名，我追求的是灵魂的自由！樱花树下的誓言！",
+        text: "你……你又来了！我追的是灵魂自由！是樱花树下的誓言！不是你的破排名！",
         next: "guo_entry"
     },
 
@@ -365,24 +375,25 @@ const SCRIPT = {
         char: ASSETS.char.guo,
         anim: "hop",
         name: "郭伟城",
-        color: "#4facfe", // 蓝色
-        text: "行了行了，别吵了。据我分析，金凯峰的 Offer 概率是 98.5%，家睿只要过了语言关也有 80%。",
+        color: "#4facfe",
+        text: "得得得，都给我闭嘴一下。靠，大早上吵成这样。根据我分析，金凯峰拿 Offer 的概率 98.5%，家睿如果过语言关也有 80%。",
         next: "guo_logic"
     },
+
     "guo_logic": {
         name: "郭伟城",
-        text: "不管是 QS 20 还是 50，大家最后都要毕业的。不如先去食堂吃个饭？",
+        text: "反正争也没用。我们最后都会毕业。不如先去吃饭。我一饿就想骂人。",
         next: "major_choice"
     },
 
     // === 【重大抉择】 路线分歧 ===
     "major_choice": {
         name: "系统",
-        text: "此刻，宿舍的气氛很微妙。你决定站在哪一边？",
+        text: "宿舍的气氛变得微妙。你决定站在哪一边？",
         choices: [
             { text: "【樱花线】支持黄家睿，为了梦想！", target: "route_japan_start" },
-            { text: "【学霸线】膜拜金凯峰，追求 QS 排名。", target: "route_qs_start" },
-            { text: "【中立线】跟郭伟城去食堂，稳扎稳打。", target: "route_peace_start" }
+            { text: "【学霸线】支持金凯峰，追求 QS 排名。", target: "route_qs_start" },
+            { text: "【中立线】跟郭伟城吃饭，稳扎稳打。", target: "route_peace_start" }
         ]
     },
 
@@ -393,23 +404,23 @@ const SCRIPT = {
         bg: ASSETS.bg.street_jp,
         char: ASSETS.char.huang,
         name: "黄家睿",
-        text: "我就知道你懂我！走，我们不理那些俗人。我带你看看我规划的‘东京制霸路线图’。",
+        text: "我早就知道你懂我！来，我给你展示我策划的《东京制霸路线图》！任天堂总部也在清单里！",
         next: "jp_1"
     },
     "jp_1": {
-        text: "黄家睿兴奋地拿出了一张密密麻麻的地图，上面全是圣地巡礼的标记。",
+        text: "他兴奋地展开一张巨大的地图，上面满是圣地巡礼标记、秋叶原街区标记，还有任天堂总部大楼的小贴纸。",
         next: "jp_2"
     },
     "jp_2": {
         name: "黄家睿",
-        text: "只要我们努力，明年春天一定能在目黑川看樱花！呐，约定好了哦！",
+        text: "只要我们努力，明年春天就能站在目黑川，看樱花飘落。呐，这是约定哦！",
         next: "jp_end"
     },
     "jp_end": {
         bg: "#000",
         char: null,
         name: "Ending",
-        text: "【Happy End：樱花树下的约定】\n你和黄家睿成为了最好的二次元搭档。",
+        text: "【Happy End：樱花树下的约定】\n你和黄家睿成为了最强二次元搭档。",
         end: true
     },
 
@@ -420,23 +431,23 @@ const SCRIPT = {
         bg: ASSETS.bg.qs_hell,
         char: ASSETS.char.jin,
         name: "金凯峰",
-        text: "哦？眼光不错。你也意识到环境的重要性了吗？跟聪明人在一起，才能进步。",
+        text: "不错。你果然是看重未来的人。来，这本《常春藤申请秘籍》给你。边吃炸鸡边学，效果翻倍。",
         next: "qs_1"
     },
     "qs_1": {
-        text: "金凯峰丢给你一本《常春藤申请秘籍》。",
+        text: "金凯峰神情严肃，却一手拿着炸鸡，一手将厚厚的秘籍塞给你。",
         next: "qs_2"
     },
     "qs_2": {
         name: "金凯峰",
-        text: "从今天开始，你要戒掉游戏和懒觉。我们的目标是星辰大海，而不是那小小的岛国。",
+        text: "从现在起，你要戒懒觉、戒游戏、戒低效努力。我们的目标是星辰大海，而不是一个小小的岛国。",
         next: "qs_end"
     },
     "qs_end": {
         bg: "#000",
         char: null,
         name: "Ending",
-        text: "【True End：精英的俯瞰】\n在金凯峰的指导下，你的 GPA 飙升，成为了下一个传说。",
+        text: "【True End：精英的俯瞰】\n在金凯峰的指导下，你的 GPA 飙升，成为603第二位传说。",
         end: true
     },
 
@@ -447,21 +458,22 @@ const SCRIPT = {
         bg: ASSETS.bg.dorm,
         char: ASSETS.char.guo,
         name: "郭伟城",
-        text: "明智的选择。与其争吵，不如填饱肚子。",
+        text: "明智。与其吵架，不如先吃饭。妈的我快饿死了。",
         next: "peace_1"
     },
     "peace_1": {
-        text: "最后，603 的四个人一起坐在食堂里，金凯峰嫌弃着饭菜，黄家睿讨论着新番，郭伟城分析着营养成分。",
+        text: "最后，603 四人坐在食堂。金凯峰嫌弃饭菜，黄家睿讨论新番，郭伟城疯狂吐槽营养成分。",
         next: "peace_end"
     },
     "peace_end": {
         bg: "#000",
         char: null,
         name: "Ending",
-        text: "【Normal End：603 的永恒日常】\n聚是一团火，散是满天星。这就是青春啊。",
+        text: "【Normal End：603 的永恒日常】\n聚是一团火，散是满天星。这就是青春。",
         end: true
     }
 };
+
 
 /**
  * =========================================
