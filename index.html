@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>603 宿舍编年史：QS 风云与樱花梦</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<style>
+    /* ------ 全局样式系统 ------ */
+    :root {
+        --main-pink: #ff92b9;
+        --main-blue: #4facfe;
+        --main-gold: #f0932b;
+        --dark-bg: #1e1e24;
+        --ui-overlay: rgba(30, 30, 36, 0.9);
+    }
+
+    body {
+        margin: 0; padding: 0;
+        background: #000;
+        font-family: 'Noto Serif SC', 'Microsoft YaHei', serif;
+        color: white;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    /* 游戏容器：固定 16:9，手机端自动缩放 */
+    #game-stage {
+        position: relative;
+        width: 100%; max-width: 1280px;
+        aspect-ratio: 16/9;
+        background-color: #222;
+        background-size: cover;
+        background-position: center;
+        overflow: hidden;
+        box-shadow: 0 0 60px rgba(0,0,0,0.8);
+        transition: background-image 0.8s ease;
+    }
+
+    @media (max-aspect-ratio: 16/9) {
+        #game-stage { width: 100%; height: auto; }
+    }
+    @media (min-aspect-ratio: 16/9) {
+        #game-stage { height: 100%; width: auto; }
+    }
+
+    /* --- 图层系统 --- */
+    .layer { position: absolute; inset: 0; pointer-events: none; transition: opacity 0.4s; }
+
+    /* 1. 立绘层 */
+    #sprite-layer {
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+    }
+    .sprite {
+        height: 90%; /* 调整立绘大小 */
+        width: auto;
+        filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        transform: translateY(50px);
+        opacity: 0;
+        transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s;
+    }
+    .sprite.show { transform: translateY(0); opacity: 1; }
+    .sprite.shake { animation: shake 0.5s ease-in-out; }
+    .sprite.hop { animation: hop 0.4s ease-in-out; }
+    /* 特殊发光效果 */
+    .glow-gold { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); }
+    .glow-blue { filter: drop-shadow(0 0 20px rgba(0, 191, 255, 0.6)); }
+
+    /* 2. UI 层 (对话框) */
+    #ui-layer { z-index: 20; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 2%; }
+    
+    .dialog-box {
+        pointer-events: auto;
+        background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.95) 40%);
+        margin: 0 5%;
+        border-top: 3px solid var(--main-pink);
+        padding: 25px 40px;
+        height: 180px;
+        border-radius: 20px;
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .name-box {
+        position: absolute;
+        top: -25px; left: 20px;
+        background: var(--main-pink);
+        color: white;
+        padding: 5px 30px;
+        font-family: 'ZCOOL KuaiLe', cursive;
+        font-size: 1.6rem;
+        border-radius: 20px 20px 0 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        transition: background-color 0.3s;
+    }
+    
+    .text-content {
+        font-size: 1.4rem;
+        line-height: 1.6;
+        letter-spacing: 1px;
+        color: #eee;
+        text-shadow: 2px 2px 2px #000;
+        margin-top: 15px;
+        height: 120px;
+        overflow: hidden;
+    }
+    
+    /* 打字光标 */
+    .cursor-blink::after { content: ' ▼'; animation: blink 1s infinite; color: var(--main-pink); }
+
+    /* 3. 选项层 */
+    #choice-overlay {
+        z-index: 30;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(5px);
+        display: none; /* 默认隐藏 */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        pointer-events: auto;
+    }
+
+    .choice-btn {
+        width: 60%;
+        background: rgba(255,255,255,0.9);
+        padding: 18px;
+        text-align: center;
+        font-size: 1.3rem;
+        color: #333;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: 0.2s;
+        border: 4px solid transparent;
+    }
+    .choice-btn:hover {
+        transform: scale(1.05);
+        border-color: var(--main-pink);
+        color: var(--main-pink);
+        background: white;
+    }
+
+    /* 4. 标题界面层 */
+    #title-screen {
+        z-index: 100;
+        background: url('https://images.unsplash.com/photo-1492571350019-22de08371fd3?q=80&w=1920') center/cover;
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    #title-screen::before {
+        content:''; position:absolute; inset:0; background: rgba(0,0,0,0.4);
+    }
+    
+    .game-logo {
+        position: relative;
+        font-family: 'ZCOOL KuaiLe', cursive;
+        font-size: clamp(3rem, 8vw, 6rem);
+        color: white;
+        text-shadow: 4px 4px 0 var(--main-pink), 8px 8px 15px rgba(0,0,0,0.8);
+        margin-bottom: 20px;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    .start-btn {
+        position: relative;
+        padding: 15px 60px;
+        font-size: 1.8rem;
+        background: var(--main-pink);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(255, 105, 180, 0.5);
+        transition: transform 0.2s;
+    }
+    .start-btn:hover { transform: scale(1.1); background: #ff7eb3; }
+
+    /* 功能菜单 */
+    .control-bar {
+        position: absolute;
+        top: 15px; right: 15px;
+        z-index: 40;
+        display: flex; gap: 10px;
+        pointer-events: auto;
+    }
+    .c-btn {
+        background: rgba(0,0,0,0.6);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 5px 12px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    .c-btn:hover { background: white; color: black; }
+
+    /* 动画 */
+    @keyframes shake { 0%, 100% {transform:translateY(0) rotate(0);} 25%{transform:translateY(0) rotate(-2deg);} 75%{transform:translateY(0) rotate(2deg);} }
+    @keyframes hop { 0%, 100% {transform:translateY(0);} 50% {transform:translateY(-30px);} }
+    @keyframes blink { 0%,100% {opacity:0;} 50% {opacity:1;} }
+    @keyframes float { 0%,100% {transform:translateY(0);} 50% {transform:translateY(-10px);} }
+</style>
+</head>
+<body>
+
+    <div id="game-stage">
+        
+        <!-- 0. 背景特效 -->
+        <div class="layer" id="bg-layer" style="background-image: url('https://images.unsplash.com/photo-1555854877-bab0e564b8d5');"></div>
+        
+        <!-- 1. 角色层 -->
+        <div class="layer" id="sprite-layer">
+            <img id="char-img" class="sprite" src="" alt="Character">
+        </div>
+
+        <!-- 2. UI 控制与文本 -->
+        <div class="layer" id="ui-layer">
+            <div class="control-bar">
+                <div class="c-btn" onclick="Engine.save()">保存</div>
+                <div class="c-btn" onclick="Engine.load()">读取</div>
+                <div class="c-btn" onclick="Engine.skipMode()">快进</div>
+            </div>
+            
+            <div class="dialog-box" onclick="Engine.next()">
+                <div class="name-box" id="name-tag">???</div>
+                <div class="text-content" id="text-box"></div>
+            </div>
+        </div>
+
+        <!-- 3. 选项覆盖层 -->
+        <div class="layer" id="choice-overlay"></div>
+
+        <!-- 4. 标题界面 -->
+        <div class="layer" id="title-screen">
+            <div class="game-logo">603 宿舍物语<br><span style="font-size: 0.4em; opacity:0.8;">Top 20 vs Japan Dream</span></div>
+            <button class="start-btn" onclick="Engine.start()">START GAME</button>
+            <p style="position:absolute; bottom:20px; opacity:0.6; font-size:0.9rem;">Made for Dormitory 603 | Ver 2.0 Full</p>
+        </div>
+
+    </div>
+
+<script>
+/**
+ * =========================================
+ *  【Part A: 剧本配置区 (The Story)】
+ *  这里包含了 603 宿舍的核心剧情，请随意修改
+ * =========================================
+ */
+const ASSETS = {
+    bg: {
+        // 使用 Unsplash 高清图作为占位背景
+        dorm: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=1920", // 宿舍
+        class: "https://images.unsplash.com/photo-1580196969807-458542e136be?q=80&w=1920", // 教室
+        street_jp: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1920", // 日本街道风格
+        qs_hell: "https://images.unsplash.com/photo-1504190946260-181da1b3dbd6?q=80&w=1920", // 图书馆地狱
+        gold_aura: "linear-gradient(135deg, #2c3e50 0%, #000 100%)" // 金凯峰 BOSS 背景
+    },
+    char: {
+        // 注意：为了确保可运行，使用在线占位图。
+        // ★请将这些 URL 换成你们的抠图 PNG！★
+        huang: "hjr.png", 
+        jin: "jkf-removebg-preview.png", 
+        guo: "gwc.png"
+    }
+};
+
+const SCRIPT = {
+    "0": {
+        bg: ASSETS.bg.dorm,
+        name: "我",
+        text: "（睁开眼）陌生的天花板... 不，这是熟悉的 603 宿舍天花板。",
+        next: "1"
+    },
+    "1": {
+        text: "空气中弥漫着一股独特的味道——那是混杂着雅思词汇书、PS5手柄散热和日本拉面的味道。",
+        next: "2"
+    },
+    "2": {
+        sound: "door_open",
+        text: "突然，一阵急促的脚步声打破了平静。",
+        next: "3"
+    },
+    "3": {
+        bg: ASSETS.bg.dorm,
+        char: ASSETS.char.huang,
+        anim: "hop",
+        name: "黄家睿",
+        color: "#ff92b9",
+        text: "Yahuu! 大家都还在睡吗？我刚刚可是梦见自己已经在秋叶原的女仆咖啡厅了！",
+        next: "4"
+    },
+    "4": {
+        name: "黄家睿",
+        text: "嘿！那边的你！你看我这个新发型，是不是很有《东京复仇者》的感觉？（摆Pose）",
+        choices: [
+            { text: "确实很帅，可以说是 603 颜值巅峰。", target: "huang_happy" },
+            { text: "比起发型，你的雅思口语练了吗？", target: "huang_shock" },
+            { text: "无视他，继续睡。", target: "huang_ignore" }
+        ]
+    },
+
+    // --- 分支 A: 夸奖黄家睿 ---
+    "huang_happy": {
+        char: ASSETS.char.huang,
+        anim: "hop",
+        text: "哈哈！不愧是懂行的！只要心中有二次元，哪里都是东京！好感度 +10。",
+        next: "jin_entry"
+    },
+    // --- 分支 B: 打击黄家睿 ---
+    "huang_shock": {
+        char: ASSETS.char.huang,
+        anim: "shake",
+        text: "Gu...！为什么要在美好的早晨提这个词！你是魔鬼吗！",
+        next: "jin_entry"
+    },
+    "huang_ignore": {
+        text: "黄家睿见没人理他，只能默默拿出手机开始刷 B 站舞蹈区。",
+        next: "jin_entry"
+    },
+
+    // --- 核心剧情：Boss 入场 ---
+    "jin_entry": {
+        bg: ASSETS.bg.gold_aura, // 切换背景压迫感
+        char: null,
+        text: "突然，宿舍的气压变低了。门口出现了一个自带金色光环的男人。",
+        next: "jin_show"
+    },
+    "jin_show": {
+        char: ASSETS.char.jin,
+        anim: "hop",
+        name: "金凯峰",
+        color: "#f0932b", // 金色
+        text: "吵什么吵？不知道现在是 QS Top 20 的申校关键期吗？你们的喧哗会影响整个宿舍的风水。",
+        next: "jin_talk2"
+    },
+    "jin_talk2": {
+        name: "金凯峰",
+        text: "尤其是你，黄家睿。整天把日本挂在嘴边，你的 GPA 配得上东大吗？",
+        next: "confrontation"
+    },
+    "confrontation": {
+        char: ASSETS.char.huang, // 切换回黄
+        name: "黄家睿",
+        text: "你...！QS 20了不起啊！我不追求排名，我追求的是灵魂的自由！樱花树下的誓言！",
+        next: "guo_entry"
+    },
+
+    // --- 核心剧情：郭伟城入场 ---
+    "guo_entry": {
+        bg: ASSETS.bg.dorm,
+        char: ASSETS.char.guo,
+        anim: "hop",
+        name: "郭伟城",
+        color: "#4facfe", // 蓝色
+        text: "行了行了，别吵了。据我分析，金凯峰的 Offer 概率是 98.5%，家睿只要过了语言关也有 80%。",
+        next: "guo_logic"
+    },
+    "guo_logic": {
+        name: "郭伟城",
+        text: "不管是 QS 20 还是 50，大家最后都要毕业的。不如先去食堂吃个饭？",
+        next: "major_choice"
+    },
+
+    // === 【重大抉择】 路线分歧 ===
+    "major_choice": {
+        name: "系统",
+        text: "此刻，宿舍的气氛很微妙。你决定站在哪一边？",
+        choices: [
+            { text: "【樱花线】支持黄家睿，为了梦想！", target: "route_japan_start" },
+            { text: "【学霸线】膜拜金凯峰，追求 QS 排名。", target: "route_qs_start" },
+            { text: "【中立线】跟郭伟城去食堂，稳扎稳打。", target: "route_peace_start" }
+        ]
+    },
+
+    // ============================
+    //   线路 1：樱花梦想 (Japan Route)
+    // ============================
+    "route_japan_start": {
+        bg: ASSETS.bg.street_jp,
+        char: ASSETS.char.huang,
+        name: "黄家睿",
+        text: "我就知道你懂我！走，我们不理那些俗人。我带你看看我规划的‘东京制霸路线图’。",
+        next: "jp_1"
+    },
+    "jp_1": {
+        text: "黄家睿兴奋地拿出了一张密密麻麻的地图，上面全是圣地巡礼的标记。",
+        next: "jp_2"
+    },
+    "jp_2": {
+        name: "黄家睿",
+        text: "只要我们努力，明年春天一定能在目黑川看樱花！呐，约定好了哦！",
+        next: "jp_end"
+    },
+    "jp_end": {
+        bg: "#000",
+        char: null,
+        name: "Ending",
+        text: "【Happy End：樱花树下的约定】\n你和黄家睿成为了最好的二次元搭档。",
+        end: true
+    },
+
+    // ============================
+    //   线路 2：QS 争霸 (Elite Route)
+    // ============================
+    "route_qs_start": {
+        bg: ASSETS.bg.qs_hell,
+        char: ASSETS.char.jin,
+        name: "金凯峰",
+        text: "哦？眼光不错。你也意识到环境的重要性了吗？跟聪明人在一起，才能进步。",
+        next: "qs_1"
+    },
+    "qs_1": {
+        text: "金凯峰丢给你一本《常春藤申请秘籍》。",
+        next: "qs_2"
+    },
+    "qs_2": {
+        name: "金凯峰",
+        text: "从今天开始，你要戒掉游戏和懒觉。我们的目标是星辰大海，而不是那小小的岛国。",
+        next: "qs_end"
+    },
+    "qs_end": {
+        bg: "#000",
+        char: null,
+        name: "Ending",
+        text: "【True End：精英的俯瞰】\n在金凯峰的指导下，你的 GPA 飙升，成为了下一个传说。",
+        end: true
+    },
+
+    // ============================
+    //   线路 3：和平日常 (Peace Route)
+    // ============================
+    "route_peace_start": {
+        bg: ASSETS.bg.dorm,
+        char: ASSETS.char.guo,
+        name: "郭伟城",
+        text: "明智的选择。与其争吵，不如填饱肚子。",
+        next: "peace_1"
+    },
+    "peace_1": {
+        text: "最后，603 的四个人一起坐在食堂里，金凯峰嫌弃着饭菜，黄家睿讨论着新番，郭伟城分析着营养成分。",
+        next: "peace_end"
+    },
+    "peace_end": {
+        bg: "#000",
+        char: null,
+        name: "Ending",
+        text: "【Normal End：603 的永恒日常】\n聚是一团火，散是满天星。这就是青春啊。",
+        end: true
+    }
+};
+
+/**
+ * =========================================
+ *  【Part B: 游戏引擎内核 (Engine Core)】
+ *  请勿修改下方的逻辑代码，除非你懂 JS
+ * =========================================
+ */
+const Engine = {
+    currentId: '0',
+    isTyping: false,
+    autoMode: false,
+    
+    // 初始化
+    init() {
+        // 绑定键盘事件
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') this.next();
+        });
+    },
+
+    // 1. 开始游戏
+    start() {
+        const ts = document.getElementById('title-screen');
+        ts.style.opacity = 0;
+        setTimeout(() => {
+            ts.style.display = 'none';
+            this.loadScene('0'); // 从 ID 0 开始
+        }, 500);
+    },
+
+    // 2. 加载场景
+    loadScene(id) {
+        if (!SCRIPT[id]) {
+            console.error('Script Error: Scene ID not found ->', id);
+            return;
+        }
+        this.currentId = id;
+        const data = SCRIPT[id];
+
+        // 设置背景
+        if (data.bg) {
+            const bgLayer = document.getElementById('bg-layer');
+            if (data.bg.startsWith('#') || data.bg.startsWith('linear')) {
+                bgLayer.style.backgroundImage = 'none';
+                bgLayer.style.background = data.bg;
+            } else {
+                bgLayer.style.backgroundImage = `url('${data.bg}')`;
+            }
+        }
+
+        // 设置立绘
+        const charImg = document.getElementById('char-img');
+        if (data.char === null) {
+            charImg.classList.remove('show');
+            setTimeout(() => { charImg.src = ''; }, 400); // Wait fade out
+        } else if (data.char) {
+            // 如果切图片了才动作
+            if (!charImg.src.includes(data.char)) {
+                charImg.src = data.char;
+                // 简单的出场动画重置
+                charImg.classList.remove('show', 'shake', 'hop');
+                void charImg.offsetWidth; // trigger reflow
+                charImg.classList.add('show');
+                if (data.anim) charImg.classList.add(data.anim);
+                
+                // 特殊光效
+                charImg.className = `sprite show ${data.anim || ''}`;
+                if (data.name === '金凯峰') charImg.classList.add('glow-gold');
+                else if (data.name === '郭伟城') charImg.classList.add('glow-blue');
+            }
+        }
+
+        // 名字栏颜色
+        const nameBox = document.getElementById('name-tag');
+        if (data.name) {
+            nameBox.style.opacity = 1;
+            nameBox.innerText = data.name;
+            nameBox.style.background = data.color || 'var(--main-pink)';
+        } else {
+            nameBox.style.opacity = 0;
+        }
+
+        // 文本打字机
+        const textBox = document.getElementById('text-box');
+        this.isTyping = true;
+        textBox.innerHTML = '';
+        textBox.className = 'text-content cursor-blink'; // 正在打字
+        
+        let i = 0;
+        const txt = data.text;
+        const speed = this.autoMode ? 10 : 30;
+
+        if (this.timer) clearInterval(this.timer);
+        this.timer = setInterval(() => {
+            if (!this.isTyping) {
+                // 瞬间完成
+                textBox.innerHTML = txt;
+                clearInterval(this.timer);
+                this.checkChoices(data);
+                return;
+            }
+            textBox.innerHTML += txt.charAt(i);
+            i++;
+            if (i >= txt.length) {
+                this.isTyping = false;
+                textBox.classList.remove('cursor-blink'); // 打完字移除光标
+                clearInterval(this.timer);
+                this.checkChoices(data);
+            }
+        }, speed);
+    },
+
+    // 3. 检查是否需要显示选项
+    checkChoices(data) {
+        if (data.choices) {
+            const overlay = document.getElementById('choice-overlay');
+            overlay.innerHTML = ''; // 清空旧选项
+            overlay.style.display = 'flex';
+            
+            data.choices.forEach(choice => {
+                const btn = document.createElement('div');
+                btn.className = 'choice-btn';
+                btn.innerText = choice.text;
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    overlay.style.display = 'none';
+                    this.loadScene(choice.target);
+                };
+                overlay.appendChild(btn);
+            });
+        }
+        
+        // 如果是结局
+        if (data.end) {
+            setTimeout(() => {
+                alert("🎉 达成结局！感谢游玩 603 物语。");
+                location.reload();
+            }, 1000);
+        }
+    },
+
+    // 4. 点击“下一步”
+    next() {
+        const data = SCRIPT[this.currentId];
+        // 正在打字 -> 瞬间显示
+        if (this.isTyping) {
+            this.isTyping = false; 
+            return;
+        }
+        // 有选项或结束 -> 禁止点击下一页
+        if (data.choices || data.end) return;
+        
+        if (data.next) {
+            this.loadScene(data.next);
+        } else {
+            console.log('No next scene define');
+        }
+    },
+
+    // 5. 存档读档功能 (使用 localStorage)
+    save() {
+        localStorage.setItem('603Gal_SaveData', this.currentId);
+        alert('💾 进度已保存！');
+    },
+    load() {
+        const save = localStorage.getItem('603Gal_SaveData');
+        if (save && SCRIPT[save]) {
+            this.loadScene(save);
+        } else {
+            alert('❌ 没有找到存档！');
+        }
+    },
+    
+    // 6. 快进模式
+    skipMode() {
+        this.autoMode = !this.autoMode;
+        alert(this.autoMode ? "快进模式：开启 (点击对话快速跳过)" : "快进模式：关闭");
+    }
+};
+
+// 启动初始化
+Engine.init();
+
+</script>
+</body>
+</html>
