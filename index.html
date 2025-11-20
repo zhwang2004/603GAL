@@ -216,7 +216,11 @@
 </style>
 </head>
 <body>
-
+    <!-- BGM 音频元素 (Lo-Fi 轻松风格) -->
+    <!-- 使用了 Pixabay 的免版权音乐资源 -->
+    <audio id="bgm" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg">
+    </audio>
     <div id="game-stage">
         
         <!-- 0. 背景特效 -->
@@ -700,9 +704,17 @@ const Engine = {
     start() {
         const ts = document.getElementById('title-screen');
         ts.style.opacity = 0;
+        
+        // 浏览器要求用户交互后才能播放音频
+        const bgm = document.getElementById('bgm');
+        bgm.volume = 0.5; // 设置音量50%
+        bgm.play().catch(error => {
+            console.log("自动播放被阻止，等待用户交互:", error);
+        });
+
         setTimeout(() => {
             ts.style.display = 'none';
-            this.loadScene('0'); // 从 ID 0 开始
+            this.loadScene('0'); 
         }, 500);
     },
 
